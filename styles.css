@@ -25,12 +25,21 @@
     background-color: rgba(114, 93, 0, 1);
     border-radius: 10px;
     border: 2px solid black;
+    padding: 20px;
+    overflow: hidden;
+    font-size: 50px;
+    text-overflow: ellipsis;
+    color: aliceblue;
+    font-family: monospace;
 }
 
 .calc__display--secondary{
     height: 40px;
     margin: 10px 40px;
     background-color: rgba(114, 93, 0, 1);
+    padding: 10px;
+    font-size: 15px;
+    text-overflow: inherit;
 }
 
 .calc__keyboard{

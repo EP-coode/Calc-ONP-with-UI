@@ -4,6 +4,8 @@ String.prototype.swap = function (atPosition, pasteCharacter) {
     return arr.join('');
 }
 
+// todo:
+// Repair validation, style etc.
 class Calculator {
     constructor(formulaDisplay, typingDisplay) {
         this.currentNumber = "";
@@ -22,11 +24,14 @@ class Calculator {
                 this.typedFormula.pop()
                 try {
                     let onp = this.toONP(this.typedFormula);
-                    let outcome = this.getValueOfONP(onp);
+                    var outcome = this.getValueOfONP(onp);
                 }
                 catch (e) {
                     alert(e.message);
                 }
+                this.currentNumber = outcome.toString();
+                this.updateDisplay(this.mainDisplay, this.currentNumber);
+                this.updateDisplay(this.secondaryDisplay, '');
                 console.log("equals");
                 break;
             case "AC":
@@ -66,13 +71,13 @@ class Calculator {
                     this.typeOperation(null);
                     this.typedFormula.push(')')
                     this.closeTags++;
-                    this.updateDisplay(this.secondaryDisplay, this.typedFormula);
+                    this.updateDisplay(this.secondaryDisplay, this.typedFormula.join(''));
                 }
                 break;
             case "(":
                 this.typedFormula.push('(');
                 this.openTags++;
-                this.updateDisplay(this.secondaryDisplay, this.typedFormula);
+                this.updateDisplay(this.secondaryDisplay, this.typedFormula.join(''));
                 break;
             default:
                 if (!isNaN(Number.parseInt(operation))) {
@@ -88,11 +93,10 @@ class Calculator {
 
     typeOperation(operation) {
         this.numberToOperation();
-        if (!isNaN(parseFloat(this.typedFormula[this.typedFormula.length - 1]))) {
-            if (operation != null)
-                this.typedFormula.push(operation);
-            this.updateDisplay(this.secondaryDisplay, this.typedFormula);
-        }
+        if (operation != null)
+            this.typedFormula.push(operation);
+        this.updateDisplay(this.secondaryDisplay, this.typedFormula.join(''));
+
         this.updateDisplay(this.mainDisplay, this.currentNumber);
     }
 
@@ -121,14 +125,14 @@ class Calculator {
         }
         //alert("ok")
         let stack = [];
-        let queue = new Queue();
+        let queue = [];
         formula.reverse();
         while (formula.length > 0) {
             let current = formula.pop();
-            console.log(`Formula: ${formula} \n Stack:${stack} \n Queue:${queue.storage.toString()}`);
+            // console.log(`Formula: ${formula} \n Stack:${stack} \n Queue:${queue}`);
             //alert();
             if (typeof current === "number")
-                queue.enqueue(current);
+                queue.push(current);
             else if (current === '(')
                 stack.push('(');
             else if (current === ')') {
@@ -136,7 +140,7 @@ class Calculator {
                 do {
                     elem = stack.pop();
                     if (elem !== '(')
-                        queue.enqueue(elem);
+                        queue.push(elem);
                 }
                 while (elem !== '(')
             }
@@ -147,7 +151,7 @@ class Calculator {
                 while (stack.length > 0 &&
                     isOperator(topElem) &&
                     getPriority(topElem) >= priority1) {
-                    queue.enqueue(stack.pop());
+                    queue.push(stack.pop());
                     console.log("pt");
                     topElem = stack[stack.length - 1];
                 }
@@ -155,13 +159,42 @@ class Calculator {
             }
         }
         while (stack.length > 0)
-            queue.enqueue(stack.pop());
-        console.log(queue.storage);
-        return queue.storage;
+            queue.push(stack.pop());
+        console.log(queue);
+        return queue;
     }
 
     getValueOfONP(onp) {
-
+        let stack = [];
+        onp.reverse();
+        while (onp.length > 0) {
+            console.log(stack);
+            let curr = onp.pop();
+            if (typeof curr === 'number')
+                stack.push(curr);
+            else {
+                console.log("liczę");
+                let num2 = stack.pop();
+                let num1 = stack.pop();
+                switch (curr) {
+                    case '+':
+                        stack.push(num1 + num2);
+                        break;
+                    case '-':
+                        stack.push(num1 - num2);
+                        break;
+                    case '/':
+                        stack.push(num1 / num2);
+                        break;
+                    case '*':
+                        stack.push(num1 * num2);
+                        break;
+                    default:
+                        throw new Error("ERRR");
+                }
+            }
+        }
+        return stack.pop();
     }
 }
 
@@ -180,40 +213,3 @@ var calc = (function () {
     }
     return calculator;
 })();
-
-// Imported from gitHub
-// This Stack is written using the pseudoclassical pattern
-
-// Creates the queue
-var Queue = function () {
-    this.storage = {};
-    this.count = 0;
-    this.lowestCount = 0;
-}
-
-// Adds a value to the end of the chain
-Queue.prototype.enqueue = function (value) {
-    // Check to see if value is defined
-    if (value) {
-        this.storage[this.count] = value;
-        this.count++;
-    }
-}
-
-// Removes a value from the beginning of the chain
-Queue.prototype.dequeue = function () {
-    // Check to see if queue is empty
-    if (this.count - this.lowestCount === 0) {
-        return undefined;
-    }
-
-    var result = this.storage[this.lowestCount];
-    delete this.storage[this.lowestCount];
-    this.lowestCount++;
-    return result;
-}
-
-// Returns the length of the queue
-Queue.prototype.size = function () {
-    return this.count - this.lowestCount;
-}
