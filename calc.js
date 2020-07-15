@@ -4,6 +4,10 @@ String.prototype.swap = function (atPosition, pasteCharacter) {
     return arr.join('');
 }
 
+Array.prototype.lastElem = function () {
+    return this[this.length - 1];
+}
+
 // todo:
 // Repair validation, style etc.
 class Calculator {
@@ -20,16 +24,17 @@ class Calculator {
     buttonPressed(operation) {
         switch (operation) {
             case "=":
-                this.typeOperation(operation);
-                this.typedFormula.pop()
-                try {
-                    let onp = this.toONP(this.typedFormula);
-                    var outcome = this.getValueOfONP(onp);
-                }
-                catch (e) {
-                    alert(e.message);
-                }
-                this.currentNumber = outcome.toString();
+                this.numberToOperation();
+                while (this.isOperator(this.typedFormula[this.typedFormula.length - 1]))
+                    this.typedFormula.pop();
+                // try {
+                let onp = this.toONP(this.typedFormula);
+                var outcome = this.getValueOfONP(onp);
+                // }
+                // catch (e) {
+                //     alert(e.message);
+                // }
+                this.currentNumber = outcome;
                 this.updateDisplay(this.mainDisplay, this.currentNumber);
                 this.updateDisplay(this.secondaryDisplay, '');
                 console.log("equals");
@@ -91,52 +96,81 @@ class Calculator {
         }
     }
 
+    /**Ads number visible in main display and operation to typedFormula array 
+     * @param operation + - / * operation that user want to make 
+    */
     typeOperation(operation) {
+        // add number in display
         this.numberToOperation();
-        if (operation != null)
+        // if operatin is allowed if last element was not an operator and allowed symbol is passed
+        if (!this.isOperator(this.typedFormula.lastElem()) &&
+            (this.isOperator(operation) || operation === '(' || operation === ')'))
             this.typedFormula.push(operation);
-        this.updateDisplay(this.secondaryDisplay, this.typedFormula.join(''));
 
+        // user display
+        this.updateDisplay(this.secondaryDisplay, this.typedFormula.join(''));
+    }
+
+    /**
+     * Transfer number from string visible on the display to typedFormula array
+     * also cleaans display
+     * trying to reppair number if its broken
+     */
+    numberToOperation() {
+        // if dot is without succesor
+        if (this.currentNumber[this.currentNumber.length - 1] === '.')
+            this.currentNumber.replace('.', '');
+        // push to formula if can be parsed
+        if (!isNaN(Number.parseFloat(this.currentNumber)))
+            this.typedFormula.push(Number.parseFloat(this.currentNumber));
+        // clean type area
+        this.currentNumber = "";
+        // user display
         this.updateDisplay(this.mainDisplay, this.currentNumber);
     }
 
-    numberToOperation() {
-        if (this.currentNumber[this.currentNumber.length - 1] === '.')
-            this.currentNumber.replace('.', '');
-        if (!isNaN(Number.parseFloat(this.currentNumber)))
-            this.typedFormula.push(Number.parseFloat(this.currentNumber));
-        this.currentNumber = "";
-    }
-
+    /**
+     * @param {*} display container that woudl play role of display
+     * @param {String} toDisp this string woud be visible in defined display
+     */
     updateDisplay(display, toDisp) {
         display.innerHTML = toDisp;
     }
 
-    // puring code is realy needed
+    /** Says if this element is operator */
+    isOperator(elem) {
+        return (elem === "+" || elem === "-" || elem === "*" || elem === "/");
+    }
+
+    /**
+     * @param {Array} formula Array of numbers and operatos that repersent the formula
+     * @returns ONP version of passed formula as Array of numbers and operations
+     */
     toONP(formula) {
+        console.log("wejściowa formuła: " + formula);
         function getPriority(oper) {
             if (oper === "+" || oper === "-")
                 return 1;
             else
                 return 2;
         }
-        function isOperator(elem) {
-            return (elem === "+" || elem === "-" || elem === "*" || elem === "/");
-        }
-        //alert("ok")
-        let stack = [];
-        let queue = [];
+        // substitute names for js arrays
+        let stack = []; // it woud contains stacked operations to cary about later
+        let queue = []; // it would contain anwser 
+        // we read fromula from left to right js provides only pop() method so that tric make me work less
         formula.reverse();
+        // we continue it until we consider all formula elements
         while (formula.length > 0) {
+            // considered element
             let current = formula.pop();
-            // console.log(`Formula: ${formula} \n Stack:${stack} \n Queue:${queue}`);
-            //alert();
+            // in ONP numbers order stays unchanged
             if (typeof current === "number")
                 queue.push(current);
             else if (current === '(')
                 stack.push('(');
             else if (current === ')') {
                 let elem;
+                // until we reach
                 do {
                     elem = stack.pop();
                     if (elem !== '(')
@@ -149,7 +183,7 @@ class Calculator {
                 var priority1 = getPriority(opeator1);
                 let topElem = stack[stack.length - 1];
                 while (stack.length > 0 &&
-                    isOperator(topElem) &&
+                    this.isOperator(topElem) &&
                     getPriority(topElem) >= priority1) {
                     queue.push(stack.pop());
                     console.log("pt");
@@ -160,7 +194,7 @@ class Calculator {
         }
         while (stack.length > 0)
             queue.push(stack.pop());
-        console.log(queue);
+        console.log("Wygnerowano ONP: " + queue);
         return queue;
     }
 
@@ -168,7 +202,6 @@ class Calculator {
         let stack = [];
         onp.reverse();
         while (onp.length > 0) {
-            console.log(stack);
             let curr = onp.pop();
             if (typeof curr === 'number')
                 stack.push(curr);
