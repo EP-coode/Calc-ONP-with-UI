@@ -22,7 +22,14 @@ class Calculator {
     }
 
     buttonPressed(operation) {
+        console.log(operation);
         switch (operation) {
+            // backspace
+            case "←":
+                this.currentNumber = this.currentNumber.substr(0, this.currentNumber.length - 1);
+                this.updateDisplay(this.mainDisplay, this.currentNumber)
+                console.log("backspace");
+                break;
             case "=":
                 this.numberToOperation();
                 while (this.isOperator(this.typedFormula[this.typedFormula.length - 1]))
@@ -34,7 +41,7 @@ class Calculator {
                 // catch (e) {
                 //     alert(e.message);
                 // }
-                this.currentNumber = outcome;
+                this.currentNumber = outcome.toString();
                 this.updateDisplay(this.mainDisplay, this.currentNumber);
                 this.updateDisplay(this.secondaryDisplay, '');
                 console.log("equals");
@@ -80,9 +87,12 @@ class Calculator {
                 }
                 break;
             case "(":
-                this.typedFormula.push('(');
-                this.openTags++;
-                this.updateDisplay(this.secondaryDisplay, this.typedFormula.join(''));
+                console.log(this.typedFormula.lastElem());
+                if (this.typedFormula.lastElem() !== ')') {
+                    this.typedFormula.push('(');
+                    this.openTags++;
+                    this.updateDisplay(this.secondaryDisplay, this.typedFormula.join(''));
+                }
                 break;
             default:
                 if (!isNaN(Number.parseInt(operation))) {
